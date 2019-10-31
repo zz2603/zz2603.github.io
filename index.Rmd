@@ -10,7 +10,7 @@ output:
 
 You can learn about me [here](About.html)
 
-![](https://images8.alphacoders.com/104/1040260.jpg)
+![](https://www.edvancer.in/wp-content/uploads/2017/11/Anatomy-of-a-data-science-project.png)
 
 
 
