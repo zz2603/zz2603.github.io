@@ -7,8 +7,21 @@ output:
     theme: flatly
 ---
 
-# This is Ziyi's awesome website
+# A website for my Data Science homework project.
 
 You can learn about me [here](About.html)
 
 ![](https://images8.alphacoders.com/104/1040260.jpg)
+
+# Problem 2
+```{r}
+
+```
+
+
+
+
+
+
+
+
