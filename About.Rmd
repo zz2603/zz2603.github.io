@@ -1,0 +1,55 @@
+---
+title: "About me"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cerulean
+---
+
+# About me
+
+<img src="images/Ziyi.jpg" style="width:25%">
+
+* Name: Ziyi Zhao
+* Gender: Male
+* Race: Asian
+* Birthday: 10/06/1995
+* Country: China
+* City: Beijing
+* Language skills: Chinese (proficient), English (proficient)
+* Computing skills: Excel, R (more than 2 years), SAS (1 year)
+
+## Personal Hobby
+* Favorite animal: Husky, Shiba Inu, British Short Cat.
+* Favorite video game: Assassin's Creed, Call of Duty, Witcher 3.
+* Favorite Anime: Demon Slayer, Natuto, Bleach, Fate Zero.
+* Favorite Sport: English Soccer, Swimming.
+
+# Degree and academic experience
+
+## Degree
+* High School Affliated to Renmin University, 2011-2014.
+* Bachelor of Science, Acturial Science, Ohio Sate University, 2014-2018.
+* Master of Public Health, Biostatistics, Columbia Univeristy, 2018-2020.
+
+## Academic Experience
+* Research-Based Studying at Ohio State University, 2015.
+* Volunteering as Assistant Data Analyst at Clinical Laboratory Department in Beijing Aerospace General Hospital, 2017.
+* Doing Summer Intern at the Biomedical Informatic Program in Ohio State Wexner Medical Center, 2018.  
+* Doing Summer practicum at the Database Shared Resource Center in the Herbert Irving Comprehensive Cancer Center, 2019.
+
+To see more details, please see my
+[Resume](Ziyi Resume.htm)
+
+
+
+
+
+
+
+
+
+
+
+
