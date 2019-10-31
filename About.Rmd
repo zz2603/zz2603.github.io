@@ -6,7 +6,7 @@ output:
     toc_float: true
 ---
 
-# About me
+# Personal information
 
 <img src="images/Ziyi.jpg" style="width:25%">
 
@@ -22,7 +22,7 @@ output:
 ## Personal Hobby
 * Favorite animal: Husky, Shiba Inu, British Short Cat.
 * Favorite video game: Assassin's Creed, Call of Duty, Witcher 3.
-* Favorite Anime: Demon Slayer, Natuto, Bleach, Fate Zero.
+* Favorite Anime: Demon Slayer, Naruto, Bleach, Fate Zero.
 * Favorite Sport: English Soccer, Swimming.
 
 # Degree and academic experience
