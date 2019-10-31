@@ -4,7 +4,6 @@ output:
   html_document:
     toc: true
     toc_float: true
-    theme: readable
 ---
 
 # A website for my Data Science homework project.
@@ -13,10 +12,8 @@ You can learn about me [here](About.html)
 
 ![](https://images8.alphacoders.com/104/1040260.jpg)
 
-# Problem 2
-```{r}
 
-```
+
 
 
 
