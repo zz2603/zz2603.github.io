@@ -5,8 +5,12 @@ navbar:
   right:
     - text: "About"
       href: About.html
-    - text: "Problem 2"
-      href: problem_2.html
+    - text: Example
+      menu:
+       - text: "Problem 2"
+         href: problem_2.html
+       - text: "Problem 2 dashboard"
+         href: problem_2_dashboard.html
     - icon: fa-envelope fa-lg
       href: mailto:<zz2603@columbia.edu>
     - icon: fa-github fa-lg

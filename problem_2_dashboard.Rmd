@@ -1,26 +1,18 @@
 ---
-title: "Problem 2"
+title: "Problem 2 Dashboard"
 output: 
-  html_document:
-    code_folding: hide
-    toc: true
-    toc_float: true
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(flexdashboard)
 library(tidyverse)
 library(viridis)
 library(p8105.datasets)
 library(plotly)
 
-```
-
-
-# NYC restaurant inspectations
-The dataset introduce the results of inspectation of restaurants in NYC.  
-
-```{r}
 data(rest_inspec)
 
 set.seed(1)
@@ -51,14 +43,12 @@ cuisinefct <- factor(pull(inspectbl,cuisine_description)) %>%
   forcats::fct_relevel(c("Asian","Chinese","Japanese","Korean"))
 inspectbl[,3] <- cuisinefct
 
-
-head(inspectbl) %>% knitr::kable()
-           
 ```
 
-Here are first 6 observations after we filter out what we want. I want to see how those Asian restaurants' scores in Manhattan looks like because I'm a very loyal customer of these Asian restaunrant. I'm very eager to know if I will get stomachache after I eat their foods.
+Column {data-width=650}
+-----------------------------------------------------------------------
 
-## Make a bar chart to see critical violation in four cuisine restaurants.
+### Chart A
 
 ```{r}
 criticplt <- inspectbl %>% group_by(inspection_date,
@@ -78,12 +68,12 @@ criticplt <- inspectbl %>% group_by(inspection_date,
   theme_classic()
 
 ggplotly(criticplt)
-
 ```
 
-In 2017, there are more than half of restaurants with critical violation in four cuisine restaurants. The total number of Chinese retaurant is the highest and the number of violated Chinese restaurant is also the highest. From the plot, we can find out that the proportion of critical violation in Chinese and Korean restaurants are much higher than Asian and Japanese restaurants.  
+Column {data-width=350}
+-----------------------------------------------------------------------
 
-## Make a bosxplot to see score of four asian cuisine restaurants in 2017.
+### Chart B
 
 ```{r}
 scoreplt <- inspectbl %>% 
@@ -100,12 +90,9 @@ scoreplt <- inspectbl %>%
   theme_classic()
   
 ggplotly(scoreplt)
-
 ```
 
-The median of four Asian cuisine restaurants ranged from 15 to 25. The Asian restuarant got highest median scores. The distribution of score of Japanese restaurants are skewed to left; the distributions of score of Chinese and Asian are nearly symmetric and balanced; the distribution of score of Korean restaurant is skewed to right. In general, hygenity condition of those asian cuisine restaurants are fair because scores of half of those restaurant are 20 above. Only a few restaurants (outliers) have great hygenity conditions. 
-
-## Make a scattter and line plot to see if there is trend of score from 2014 to 2017
+### Chart C
 
 ```{r}
 yearplt <- inspectbl %>% 
@@ -126,11 +113,5 @@ yearplt <- inspectbl %>%
     theme_classic()
 
 ggplotly(yearplt)
-
 ```
-
-Since we have categorial variable on x scale, it's very hard to observe any direct trends from the scatterplots of all score plots. We make a mean score per year instead. We make exact trends and general trends plots separately. Although there is a general increasing trends for four cuisine restaurants from 2014 to 2017, the Japanese, Chinese and Asian's mean score were decreasing from 2014 to 2016. From 2016 to 2017, mean score of these three cuisine restaurants increase vigorously. The average score of Korean restuarant was continuously increasing from 2014 to 2017 though there is an slight decrease of mean score in 2016.  
-
-
-
 

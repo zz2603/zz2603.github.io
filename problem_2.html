@@ -24,8 +24,16 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.3/htmlwidgets.js"></script>
+<script src="site_libs/plotly-binding-4.9.0/plotly.js"></script>
+<script src="site_libs/typedarray-0.1/typedarray.min.js"></script>
+<link href="site_libs/crosstalk-1.0.0/css/crosstalk.css" rel="stylesheet" />
+<script src="site_libs/crosstalk-1.0.0/js/crosstalk.min.js"></script>
+<link href="site_libs/plotly-htmlwidgets-css-1.46.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="site_libs/plotly-main-1.46.1/plotly-latest.min.js"></script>
 <link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
 <link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
 
@@ -250,6 +258,9 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
 
 
@@ -349,8 +360,20 @@ div.tocify {
         <li>
   <a href="About.html">About</a>
 </li>
-<li>
-  <a href="problem_2.html">Problem 2</a>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Example
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="problem_2.html">Problem 2</a>
+    </li>
+    <li>
+      <a href="problem_2_dashboard.html">Problem 2 dashboard</a>
+    </li>
+  </ul>
 </li>
 <li>
   <a href="mailto:&lt;zz2603@columbia.edu&gt;">
@@ -371,6 +394,14 @@ div.tocify {
 
 <div class="fluid-row" id="header">
 
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
 
 
 <h1 class="title toc-ignore">Problem 2</h1>
@@ -378,7 +409,172 @@ div.tocify {
 </div>
 
 
+<div id="nyc-restaurant-inspectations" class="section level1">
+<h1>NYC restaurant inspectations</h1>
+<p>The dataset introduce the results of inspectation of restaurants in NYC.</p>
+<pre class="r"><code>data(rest_inspec)
 
+set.seed(1)
+inspectbl &lt;- rest_inspec %&gt;% 
+  select(boro,critical_flag,cuisine_description,dba,inspection_date,
+         score) %&gt;% 
+  filter(!is.na(dba),!is.na(score),boro==&quot;MANHATTAN&quot;,
+         cuisine_description %in% c(&quot;Chinese&quot;,&quot;Korean&quot;,&quot;Japanese&quot;,&quot;Asian&quot;),
+         str_detect(inspection_date,c(&quot;2017&quot;,&quot;2016&quot;,&quot;2015&quot;,&quot;2014&quot;))) %&gt;%
+  sample_n(3000)
+
+inspec_date &lt;- as.character(pull(inspectbl,inspection_date))
+for (i in 1:length(inspec_date)) {
+  if (str_detect(inspec_date[i],&quot;2014&quot;)) {
+    inspec_date[i] &lt;- &quot;2014&quot;
+  } else if (str_detect(inspec_date[i],&quot;2015&quot;)) {
+    inspec_date[i] &lt;- &quot;2015&quot;
+  } else if (str_detect(inspec_date[i],&quot;2016&quot;)) {
+    inspec_date[i] &lt;- &quot;2016&quot;
+  } else {
+    inspec_date[i] &lt;- &quot;2017&quot;
+  }
+} 
+inspec_date &lt;- factor(inspec_date) %&gt;% relevel(ref = &quot;2014&quot;)
+inspectbl[,5] &lt;- inspec_date
+
+cuisinefct &lt;- factor(pull(inspectbl,cuisine_description)) %&gt;% 
+  forcats::fct_relevel(c(&quot;Asian&quot;,&quot;Chinese&quot;,&quot;Japanese&quot;,&quot;Korean&quot;))
+inspectbl[,3] &lt;- cuisinefct
+
+
+head(inspectbl) %&gt;% knitr::kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">boro</th>
+<th align="left">critical_flag</th>
+<th align="left">cuisine_description</th>
+<th align="left">dba</th>
+<th align="left">inspection_date</th>
+<th align="right">score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">MANHATTAN</td>
+<td align="left">Critical</td>
+<td align="left">Korean</td>
+<td align="left">K’OOK</td>
+<td align="left">2017</td>
+<td align="right">44</td>
+</tr>
+<tr class="even">
+<td align="left">MANHATTAN</td>
+<td align="left">Not Critical</td>
+<td align="left">Chinese</td>
+<td align="left">NEW NYC YOAN MING GARDEN</td>
+<td align="left">2014</td>
+<td align="right">13</td>
+</tr>
+<tr class="odd">
+<td align="left">MANHATTAN</td>
+<td align="left">Not Critical</td>
+<td align="left">Japanese</td>
+<td align="left">BRUSHSTROKE (30 HUDSON ST)</td>
+<td align="left">2015</td>
+<td align="right">12</td>
+</tr>
+<tr class="even">
+<td align="left">MANHATTAN</td>
+<td align="left">Critical</td>
+<td align="left">Chinese</td>
+<td align="left">LOTUS LUCKY EXPRESS</td>
+<td align="left">2016</td>
+<td align="right">24</td>
+</tr>
+<tr class="odd">
+<td align="left">MANHATTAN</td>
+<td align="left">Critical</td>
+<td align="left">Japanese</td>
+<td align="left">KAEDE SUSHI</td>
+<td align="left">2016</td>
+<td align="right">12</td>
+</tr>
+<tr class="even">
+<td align="left">MANHATTAN</td>
+<td align="left">Critical</td>
+<td align="left">Chinese</td>
+<td align="left">SHUN CHEONG iKITCHEN</td>
+<td align="left">2016</td>
+<td align="right">28</td>
+</tr>
+</tbody>
+</table>
+<p>Here are first 6 observations after we filter out what we want. I want to see how those Asian restaurants’ scores in Manhattan looks like because I’m a very loyal customer of these Asian restaunrant. I’m very eager to know if I will get stomachache after I eat their foods.</p>
+<div id="make-a-bar-chart-to-see-critical-violation-in-four-cuisine-restaurants." class="section level2">
+<h2>Make a bar chart to see critical violation in four cuisine restaurants.</h2>
+<pre class="r"><code>criticplt &lt;- inspectbl %&gt;% group_by(inspection_date,
+                       cuisine_description,critical_flag) %&gt;% 
+  summarize(n=n()) %&gt;% 
+  filter(critical_flag %in% c(&quot;Critical&quot;,&quot;Not Critical&quot;),
+         inspection_date==&quot;2017&quot;) %&gt;% 
+  ggplot(aes(x=cuisine_description,y=n,fill=critical_flag))+
+  geom_bar(stat=&quot;identity&quot;)+
+  scale_fill_viridis(name=&quot;Violation&quot;,discrete=TRUE)+
+  labs(
+    x=&quot;Cuisine&quot;,
+    y=&quot;Counts&quot;,
+    title=&quot;2017 Violation plot&quot;
+  )+
+  theme(plot.title = element_text(face=&quot;bold&quot;))+
+  theme_classic()
+
+ggplotly(criticplt)</code></pre>
+<div id="htmlwidget-1fa3197130849dcf7cc7" style="width:672px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1fa3197130849dcf7cc7">{"x":{"data":[{"orientation":"v","width":[0.9,0.9,0.9,0.9],"base":[42,122,87,22],"x":[1,2,3,4],"y":[59,239,155,38],"text":["cuisine_description: Asian<br />n:  59<br />critical_flag: Critical","cuisine_description: Chinese<br />n: 239<br />critical_flag: Critical","cuisine_description: Japanese<br />n: 155<br />critical_flag: Critical","cuisine_description: Korean<br />n:  38<br />critical_flag: Critical"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(68,1,84,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"Critical","legendgroup":"Critical","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"orientation":"v","width":[0.9,0.9,0.9,0.9],"base":[0,0,0,0],"x":[1,2,3,4],"y":[42,122,87,22],"text":["cuisine_description: Asian<br />n:  42<br />critical_flag: Not Critical","cuisine_description: Chinese<br />n: 122<br />critical_flag: Not Critical","cuisine_description: Japanese<br />n:  87<br />critical_flag: Not Critical","cuisine_description: Korean<br />n:  22<br />critical_flag: Not Critical"],"type":"bar","marker":{"autocolorscale":false,"color":"rgba(253,231,37,1)","line":{"width":1.88976377952756,"color":"transparent"}},"name":"Not Critical","legendgroup":"Not Critical","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":43.7625570776256,"r":7.30593607305936,"b":40.1826484018265,"l":43.1050228310502},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"title":{"text":"2017 Violation plot","font":{"color":"rgba(0,0,0,1)","family":"","size":17.5342465753425},"x":0,"xref":"paper"},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.4,4.6],"tickmode":"array","ticktext":["Asian","Chinese","Japanese","Korean"],"tickvals":[1,2,3,4],"categoryorder":"array","categoryarray":["Asian","Chinese","Japanese","Korean"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0.66417600664176,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"y","title":{"text":"Cuisine","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-18.05,379.05],"tickmode":"array","ticktext":["0","100","200","300"],"tickvals":[0,100,200,300],"categoryorder":"array","categoryarray":["0","100","200","300"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0.66417600664176,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"x","title":{"text":"Counts","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":true,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.88976377952756,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895},"y":0.96751968503937},"annotations":[{"text":"Violation","x":1.02,"y":1,"showarrow":false,"ax":0,"ay":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"xref":"paper","yref":"paper","textangle":-0,"xanchor":"left","yanchor":"bottom","legendTitle":true}],"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","showSendToCloud":false},"source":"A","attrs":{"20507c315680":{"x":{},"y":{},"fill":{},"type":"bar"}},"cur_data":"20507c315680","visdat":{"20507c315680":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<p>In 2017, there are more than half of restaurants with critical violation in four cuisine restaurants. The total number of Chinese retaurant is the highest and the number of violated Chinese restaurant is also the highest. From the plot, we can find out that the proportion of critical violation in Chinese and Korean restaurants are much higher than Asian and Japanese restaurants.</p>
+</div>
+<div id="make-a-bosxplot-to-see-score-of-four-asian-cuisine-restaurants-in-2017." class="section level2">
+<h2>Make a bosxplot to see score of four asian cuisine restaurants in 2017.</h2>
+<pre class="r"><code>scoreplt &lt;- inspectbl %&gt;% 
+  filter(inspection_date==&quot;2017&quot;) %&gt;% 
+  ggplot(aes(x=cuisine_description,y=score,fill=cuisine_description))+
+  geom_boxplot(alpha=0.7)+
+  scale_fill_viridis(name=&quot;Cuisine&quot;,discrete = TRUE)+
+  labs(
+    x=&quot;Cuisine&quot;,
+    y=&quot;Score&quot;,
+    title=&quot;2017 Asian Cuisine Score plot&quot;
+  )+
+  theme(plot.title = element_text(face = &quot;bold&quot;))+
+  theme_classic()
+  
+ggplotly(scoreplt)</code></pre>
+<div id="htmlwidget-53e01bf3b8f6ef7b8760" style="width:672px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-53e01bf3b8f6ef7b8760">{"x":{"data":[{"x":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],"y":[13,22,19,25,9,42,7,44,24,14,13,8,27,8,36,26,41,72,38,72,21,9,13,26,2,31,33,64,12,44,23,32,41,39,11,11,9,31,50,23,42,2,23,9,13,26,27,29,42,29,35,42,13,24,21,13,23,44,17,11,21,11,24,25,12,20,44,42,34,49,10,9,57,11,10,29,7,10,9,24,29,51,36,14,24,21,64,41,11,7,35,36,25,16,9,2,24,7,24,26,18,21],"hoverinfo":"y","type":"box","fillcolor":"rgba(68,1,84,0.7)","marker":{"opacity":null,"outliercolor":"rgba(0,0,0,1)","line":{"width":1.88976377952756,"color":"rgba(0,0,0,1)"},"size":5.66929133858268},"line":{"color":"rgba(51,51,51,1)","width":1.88976377952756},"name":"Asian","legendgroup":"Asian","showlegend":true,"xaxis":"x","yaxis":"y","frame":null},{"x":[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],"y":[13,23,24,38,4,13,77,12,43,29,50,20,12,21,26,21,10,19,13,13,30,13,57,17,42,13,27,32,20,21,18,53,9,40,24,35,11,26,11,42,45,35,13,47,3,9,13,37,29,20,23,9,24,25,20,21,4,18,11,7,28,10,12,32,11,12,73,24,18,45,19,17,29,36,21,31,2,31,30,53,12,75,36,0,34,29,10,67,67,24,14,13,40,12,77,13,18,24,17,12,23,17,76,8,67,61,21,57,11,12,22,13,28,39,12,45,30,30,17,22,13,40,9,21,22,47,12,12,37,38,12,32,29,10,19,13,18,23,9,37,35,25,27,11,7,23,9,4,30,19,34,21,12,13,24,28,59,18,38,13,14,23,19,35,13,22,17,23,23,21,43,5,22,30,19,47,7,23,36,36,12,21,16,28,12,11,11,23,9,57,9,37,12,34,9,40,41,21,9,7,17,18,12,57,14,13,30,19,11,22,12,12,38,31,20,32,32,29,11,13,58,57,24,27,27,14,37,16,21,7,5,21,28,41,9,39,73,10,13,10,47,23,25,30,52,23,12,28,30,14,5,20,43,45,7,22,47,12,28,22,20,12,54,24,40,41,37,19,12,5,71,16,34,40,20,18,20,17,22,7,77,31,21,41,31,9,20,59,77,25,3,9,34,9,24,26,28,29,25,32,17,21,10,22,9,13,24,27,24,25,11,18,21,27,37,24,39,35,28,47,13,75,17,12,24,34,18,57,30,12,38,21,12,25,36,12,32,23,33,32,45,10,9,45,25,4,57,25,12,11,41,24,38,21,45,48,25,18,50,35,32,14,43],"hoverinfo":"y","type":"box","fillcolor":"rgba(49,104,142,0.7)","marker":{"opacity":null,"outliercolor":"rgba(0,0,0,1)","line":{"width":1.88976377952756,"color":"rgba(0,0,0,1)"},"size":5.66929133858268},"line":{"color":"rgba(51,51,51,1)","width":1.88976377952756},"name":"Chinese","legendgroup":"Chinese","showlegend":true,"xaxis":"x","yaxis":"y","frame":null},{"x":[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],"y":[20,19,13,18,12,8,24,12,39,16,12,19,34,25,26,43,10,9,37,9,20,19,9,10,28,70,62,12,2,17,11,8,21,30,26,13,23,58,27,25,6,12,13,26,21,16,12,15,32,13,13,8,12,78,32,18,10,18,10,23,22,10,10,12,12,12,34,32,11,15,13,41,17,8,44,12,8,15,17,23,11,13,2,15,11,13,27,62,13,11,22,24,12,7,35,17,12,11,20,13,18,7,13,51,11,35,11,28,11,16,41,13,36,42,12,4,8,37,25,33,48,12,21,11,17,12,12,27,34,12,15,15,28,21,22,28,7,23,27,10,32,10,12,17,13,29,21,24,25,14,12,43,52,72,13,13,15,14,23,24,35,72,21,10,15,20,8,10,28,28,30,10,11,11,30,64,42,20,21,35,27,45,9,24,13,18,9,22,4,23,27,22,34,28,18,36,92,13,2,23,13,31,10,11,10,17,5,32,13,10,27,12,20,19,12,27,23,19,16,40,9,41,10,12,21,27,21,32,27,12,12,12,78,34,39,13,34,15,11,13,22,22],"hoverinfo":"y","type":"box","fillcolor":"rgba(53,183,121,0.7)","marker":{"opacity":null,"outliercolor":"rgba(0,0,0,1)","line":{"width":1.88976377952756,"color":"rgba(0,0,0,1)"},"size":5.66929133858268},"line":{"color":"rgba(51,51,51,1)","width":1.88976377952756},"name":"Japanese","legendgroup":"Japanese","showlegend":true,"xaxis":"x","yaxis":"y","frame":null},{"x":[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],"y":[44,19,13,66,24,39,16,21,17,101,18,11,13,23,20,18,13,7,13,14,24,24,20,27,44,45,66,24,22,21,18,30,9,20,13,21,44,12,20,24,44,46,22,22,10,6,13,22,18,13,13,10,6,84,27,63,19,24,22,7,10],"hoverinfo":"y","type":"box","fillcolor":"rgba(253,231,37,0.7)","marker":{"opacity":null,"outliercolor":"rgba(0,0,0,1)","line":{"width":1.88976377952756,"color":"rgba(0,0,0,1)"},"size":5.66929133858268},"line":{"color":"rgba(51,51,51,1)","width":1.88976377952756},"name":"Korean","legendgroup":"Korean","showlegend":true,"xaxis":"x","yaxis":"y","frame":null}],"layout":{"margin":{"t":43.7625570776256,"r":7.30593607305936,"b":40.1826484018265,"l":43.1050228310502},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"title":{"text":"2017 Asian Cuisine Score plot","font":{"color":"rgba(0,0,0,1)","family":"","size":17.5342465753425},"x":0,"xref":"paper"},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.4,4.6],"tickmode":"array","ticktext":["Asian","Chinese","Japanese","Korean"],"tickvals":[1,2,3,4],"categoryorder":"array","categoryarray":["Asian","Chinese","Japanese","Korean"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0.66417600664176,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"y","title":{"text":"Cuisine","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-5.05,106.05],"tickmode":"array","ticktext":["0","25","50","75","100"],"tickvals":[0,25,50,75,100],"categoryorder":"array","categoryarray":["0","25","50","75","100"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0.66417600664176,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"x","title":{"text":"Score","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":true,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.88976377952756,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895},"y":0.96751968503937},"annotations":[{"text":"Cuisine","x":1.02,"y":1,"showarrow":false,"ax":0,"ay":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"xref":"paper","yref":"paper","textangle":-0,"xanchor":"left","yanchor":"bottom","legendTitle":true}],"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","showSendToCloud":false},"source":"A","attrs":{"2050581f423f":{"x":{},"y":{},"fill":{},"type":"box"}},"cur_data":"2050581f423f","visdat":{"2050581f423f":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<p>The median of four Asian cuisine restaurants ranged from 15 to 25. The Asian restuarant got highest median scores. The distribution of score of Japanese restaurants are skewed to left; the distributions of score of Chinese and Asian are nearly symmetric and balanced; the distribution of score of Korean restaurant is skewed to right. In general, hygenity condition of those asian cuisine restaurants are fair because scores of half of those restaurant are 20 above. Only a few restaurants (outliers) have great hygenity conditions.</p>
+</div>
+<div id="make-a-scattter-and-line-plot-to-see-if-there-is-trend-of-score-from-2014-to-2017" class="section level2">
+<h2>Make a scattter and line plot to see if there is trend of score from 2014 to 2017</h2>
+<pre class="r"><code>yearplt &lt;- inspectbl %&gt;% 
+  group_by(inspection_date,cuisine_description) %&gt;%
+  summarize(average=mean(score)) %&gt;% 
+  ggplot(aes(x=inspection_date,y=average,
+             color=cuisine_description,group=cuisine_description))+
+  geom_point()+
+  geom_line(alpha=0.5)+
+  geom_smooth(method = lm, se=FALSE)+
+  scale_color_viridis(name=&quot;Cuisine&quot;,discrete = TRUE)+
+  labs(
+    x=&quot;Year&quot;,
+    y=&quot;Annual Mean of Score&quot;,
+    title = &quot;2014-2017 Annual Score Plot&quot;
+  )+
+    theme(plot.title = element_text(face=&quot;bold&quot;))+
+    theme_classic()
+
+ggplotly(yearplt)</code></pre>
+<div id="htmlwidget-01560d6583a067c0af9b" style="width:672px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-01560d6583a067c0af9b">{"x":{"data":[{"x":[1,2,3,4],"y":[22.6,21.4757281553398,19.6504854368932,25.1862745098039],"text":["inspection_date: 2014<br />average: 22.60000<br />cuisine_description: Asian<br />cuisine_description: Asian","inspection_date: 2015<br />average: 21.47573<br />cuisine_description: Asian<br />cuisine_description: Asian","inspection_date: 2016<br />average: 19.65049<br />cuisine_description: Asian<br />cuisine_description: Asian","inspection_date: 2017<br />average: 25.18627<br />cuisine_description: Asian<br />cuisine_description: Asian"],"type":"scatter","mode":"markers+lines","marker":{"autocolorscale":false,"color":"rgba(68,1,84,1)","opacity":1,"size":5.66929133858268,"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(68,1,84,1)"}},"hoveron":"points","name":"Asian","legendgroup":"Asian","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","line":{"width":1.88976377952756,"color":"rgba(68,1,84,0.5)","dash":"solid"},"frame":null},{"x":[1,2,3,4],"y":[24.30859375,23.3264248704663,22.1168224299065,25.7300275482094],"text":["inspection_date: 2014<br />average: 24.30859<br />cuisine_description: Chinese<br />cuisine_description: Chinese","inspection_date: 2015<br />average: 23.32642<br />cuisine_description: Chinese<br />cuisine_description: Chinese","inspection_date: 2016<br />average: 22.11682<br />cuisine_description: Chinese<br />cuisine_description: Chinese","inspection_date: 2017<br />average: 25.73003<br />cuisine_description: Chinese<br />cuisine_description: Chinese"],"type":"scatter","mode":"markers+lines","marker":{"autocolorscale":false,"color":"rgba(49,104,142,1)","opacity":1,"size":5.66929133858268,"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(49,104,142,1)"}},"hoveron":"points","name":"Chinese","legendgroup":"Chinese","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","line":{"width":1.88976377952756,"color":"rgba(49,104,142,0.5)","dash":"solid"},"frame":null},{"x":[1,2,3,4],"y":[19.3205128205128,18.8472622478386,18.1917293233083,21.6074380165289],"text":["inspection_date: 2014<br />average: 19.32051<br />cuisine_description: Japanese<br />cuisine_description: Japanese","inspection_date: 2015<br />average: 18.84726<br />cuisine_description: Japanese<br />cuisine_description: Japanese","inspection_date: 2016<br />average: 18.19173<br />cuisine_description: Japanese<br />cuisine_description: Japanese","inspection_date: 2017<br />average: 21.60744<br />cuisine_description: Japanese<br />cuisine_description: Japanese"],"type":"scatter","mode":"markers+lines","marker":{"autocolorscale":false,"color":"rgba(53,183,121,1)","opacity":1,"size":5.66929133858268,"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(53,183,121,1)"}},"hoveron":"points","name":"Japanese","legendgroup":"Japanese","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","line":{"width":1.88976377952756,"color":"rgba(53,183,121,0.5)","dash":"solid"},"frame":null},{"x":[1,2,3,4],"y":[18.3529411764706,23.5178571428571,21.7741935483871,25.2295081967213],"text":["inspection_date: 2014<br />average: 18.35294<br />cuisine_description: Korean<br />cuisine_description: Korean","inspection_date: 2015<br />average: 23.51786<br />cuisine_description: Korean<br />cuisine_description: Korean","inspection_date: 2016<br />average: 21.77419<br />cuisine_description: Korean<br />cuisine_description: Korean","inspection_date: 2017<br />average: 25.22951<br />cuisine_description: Korean<br />cuisine_description: Korean"],"type":"scatter","mode":"markers+lines","marker":{"autocolorscale":false,"color":"rgba(253,231,37,1)","opacity":1,"size":5.66929133858268,"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(253,231,37,1)"}},"hoveron":"points","name":"Korean","legendgroup":"Korean","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","line":{"width":1.88976377952756,"color":"rgba(253,231,37,0.5)","dash":"solid"},"frame":null},{"x":[1,2,3,4],"y":[21.3380849038645,21.931442984961,22.5248010660575,23.118159147154],"text":["inspection_date: 1<br />average: 21.33808<br />cuisine_description: Asian<br />cuisine_description: Asian","inspection_date: 2<br />average: 21.93144<br />cuisine_description: Asian<br />cuisine_description: Asian","inspection_date: 3<br />average: 22.52480<br />cuisine_description: Asian<br />cuisine_description: Asian","inspection_date: 4<br />average: 23.11816<br />cuisine_description: Asian<br />cuisine_description: Asian"],"type":"scatter","mode":"lines","name":"Asian","line":{"width":3.77952755905512,"color":"rgba(68,1,84,1)","dash":"solid"},"hoveron":"points","legendgroup":"Asian","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[1,2,3,4],"y":[23.4122623065353,23.7177322019421,24.023202097349,24.3286719927558],"text":["inspection_date: 1<br />average: 23.41226<br />cuisine_description: Chinese<br />cuisine_description: Chinese","inspection_date: 2<br />average: 23.71773<br />cuisine_description: Chinese<br />cuisine_description: Chinese","inspection_date: 3<br />average: 24.02320<br />cuisine_description: Chinese<br />cuisine_description: Chinese","inspection_date: 4<br />average: 24.32867<br />cuisine_description: Chinese<br />cuisine_description: Chinese"],"type":"scatter","mode":"lines","name":"Chinese","line":{"width":3.77952755905512,"color":"rgba(49,104,142,1)","dash":"solid"},"hoveron":"points","legendgroup":"Chinese","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[1,2,3,4],"y":[18.5609492025195,19.1814734688713,19.8019977352231,20.4225220015749],"text":["inspection_date: 1<br />average: 18.56095<br />cuisine_description: Japanese<br />cuisine_description: Japanese","inspection_date: 2<br />average: 19.18147<br />cuisine_description: Japanese<br />cuisine_description: Japanese","inspection_date: 3<br />average: 19.80200<br />cuisine_description: Japanese<br />cuisine_description: Japanese","inspection_date: 4<br />average: 20.42252<br />cuisine_description: Japanese<br />cuisine_description: Japanese"],"type":"scatter","mode":"lines","name":"Japanese","line":{"width":3.77952755905512,"color":"rgba(53,183,121,1)","dash":"solid"},"hoveron":"points","legendgroup":"Japanese","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[1,2,3,4],"y":[19.3857193961667,21.2743231427949,23.1629268894231,25.0515306360513],"text":["inspection_date: 1<br />average: 19.38572<br />cuisine_description: Korean<br />cuisine_description: Korean","inspection_date: 2<br />average: 21.27432<br />cuisine_description: Korean<br />cuisine_description: Korean","inspection_date: 3<br />average: 23.16293<br />cuisine_description: Korean<br />cuisine_description: Korean","inspection_date: 4<br />average: 25.05153<br />cuisine_description: Korean<br />cuisine_description: Korean"],"type":"scatter","mode":"lines","name":"Korean","line":{"width":3.77952755905512,"color":"rgba(253,231,37,1)","dash":"solid"},"hoveron":"points","legendgroup":"Korean","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":43.7625570776256,"r":7.30593607305936,"b":40.1826484018265,"l":37.2602739726027},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"title":{"text":"2014-2017 Annual Score Plot","font":{"color":"rgba(0,0,0,1)","family":"","size":17.5342465753425},"x":0,"xref":"paper"},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.4,4.6],"tickmode":"array","ticktext":["2014","2015","2016","2017"],"tickvals":[1,2,3,4],"categoryorder":"array","categoryarray":["2014","2015","2016","2017"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0.66417600664176,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"y","title":{"text":"Year","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[17.8148144120632,26.1069424594544],"tickmode":"array","ticktext":["18","20","22","24","26"],"tickvals":[18,20,22,24,26],"categoryorder":"array","categoryarray":["18","20","22","24","26"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0.66417600664176,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"x","title":{"text":"Annual Mean of Score","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":true,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.88976377952756,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895},"y":0.96751968503937},"annotations":[{"text":"Cuisine","x":1.02,"y":1,"showarrow":false,"ax":0,"ay":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"xref":"paper","yref":"paper","textangle":-0,"xanchor":"left","yanchor":"bottom","legendTitle":true}],"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","showSendToCloud":false},"source":"A","attrs":{"20502d8c2999":{"x":{},"y":{},"colour":{},"type":"scatter"},"20501a895f6e":{"x":{},"y":{},"colour":{}},"205067101922":{"x":{},"y":{},"colour":{}}},"cur_data":"20502d8c2999","visdat":{"20502d8c2999":["function (y) ","x"],"20501a895f6e":["function (y) ","x"],"205067101922":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<p>Since we have categorial variable on x scale, it’s very hard to observe any direct trends from the scatterplots of all score plots. We make a mean score per year instead. We make exact trends and general trends plots separately. Although there is a general increasing trends for four cuisine restaurants from 2014 to 2017, the Japanese, Chinese and Asian’s mean score were decreasing from 2014 to 2016. From 2016 to 2017, mean score of these three cuisine restaurants increase vigorously. The average score of Korean restuarant was continuously increasing from 2014 to 2017 though there is an slight decrease of mean score in 2016.</p>
+</div>
+</div>
 
 
 
@@ -415,6 +611,11 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
 
 <script>
 $(document).ready(function ()  {
