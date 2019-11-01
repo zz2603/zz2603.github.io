@@ -2,6 +2,7 @@
 title: "Problem 2"
 output: 
   html_document:
+    code_folding: hide
     toc: true
     toc_float: true
 ---
@@ -16,15 +17,120 @@ library(plotly)
 ```
 
 
+# NYC restaurant inspectations
+The dataset introduce the results of inspectation of restaurants in NYC.  
 
 ```{r}
+data(rest_inspec)
+
+set.seed(1)
+inspectbl <- rest_inspec %>% 
+  select(boro,critical_flag,cuisine_description,dba,inspection_date,
+         score) %>% 
+  filter(!is.na(dba),!is.na(score),boro=="MANHATTAN",
+         cuisine_description %in% c("Chinese","Korean","Japanese","Asian"),
+         str_detect(inspection_date,c("2017","2016","2015","2014"))) %>%
+  sample_n(3000)
+
+inspec_date <- as.character(pull(inspectbl,inspection_date))
+for (i in 1:length(inspec_date)) {
+  if (str_detect(inspec_date[i],"2014")) {
+    inspec_date[i] <- "2014"
+  } else if (str_detect(inspec_date[i],"2015")) {
+    inspec_date[i] <- "2015"
+  } else if (str_detect(inspec_date[i],"2016")) {
+    inspec_date[i] <- "2016"
+  } else {
+    inspec_date[i] <- "2017"
+  }
+} 
+inspec_date <- factor(inspec_date) %>% relevel(ref = "2014")
+inspectbl[,5] <- inspec_date
+
+cuisinefct <- factor(pull(inspectbl,cuisine_description)) %>% 
+  forcats::fct_relevel(c("Asian","Chinese","Japanese","Korean"))
+inspectbl[,3] <- cuisinefct
+
+
+head(inspectbl) %>% knitr::kable()
+           
+```
+
+Here are first 6 observations after we filter out what we want. I want to see how those Asian restaurants' scores in Manhattan looks like because I'm a very loyal customer of these Asian restaunrant. I'm very eager to know if I will get stomachache after I eat their foods.
+
+## Make a bar chart to see critical violation in four cuisine restaurants.
+
+```{r}
+criticplt <- inspectbl %>% group_by(inspection_date,
+                       cuisine_description,critical_flag) %>% 
+  summarize(n=n()) %>% 
+  filter(critical_flag %in% c("Critical","Not Critical"),
+         inspection_date=="2017") %>% 
+  ggplot(aes(x=cuisine_description,y=n,fill=critical_flag))+
+  geom_bar(stat="identity")+
+  scale_fill_viridis(name="Violation",discrete=TRUE)+
+  labs(
+    x="Cuisine",
+    y="Counts",
+    title="2017 Violation plot"
+  )+
+  theme(plot.title = element_text(face="bold"))+
+  theme_classic()
+
+ggplotly(criticplt)
 
 ```
 
+In 2017, there are more than half of restaurants with critical violation in four cuisine restaurants. The total number of Chinese retaurant is the highest and the number of violated Chinese restaurant is also the highest. From the plot, we can find out that the proportion of critical violation in Chinese and Korean restaurants are much higher than Asian and Japanese restaurants.  
 
+## Make a bosxplot to see score of four asian cuisine restaurants in 2017.
 
 ```{r}
+scoreplt <- inspectbl %>% 
+  filter(inspection_date=="2017") %>% 
+  ggplot(aes(x=cuisine_description,y=score,fill=cuisine_description))+
+  geom_boxplot(alpha=0.7)+
+  scale_fill_viridis(name="Cuisine",discrete = TRUE)+
+  labs(
+    x="Cuisine",
+    y="Score",
+    title="2017 Asian Cuisine Score plot"
+  )+
+  theme(plot.title = element_text(face = "bold"))+
+  theme_classic()
+  
+ggplotly(scoreplt)
 
 ```
+
+The median of four Asian cuisine restaurants ranged from 15 to 25. The Asian restuarant got highest median scores. The distribution of score of Japanese restaurants are skewed to left; the distributions of score of Chinese and Asian are nearly symmetric and balanced; the distribution of score of Korean restaurant is skewed to right. In general, hygenity condition of those asian cuisine restaurants are fair because scores of half of those restaurant are 20 above. Only a few restaurants (outliers) have great hygenity conditions. 
+
+## Make a scatter plot to see if there is trend of score from 2014 to 2017
+
+```{r}
+yearplt <- inspectbl %>% 
+  group_by(inspection_date,cuisine_description) %>%
+  summarize(average=mean(score)) %>% 
+  ggplot(aes(x=inspection_date,y=average,
+             color=cuisine_description,group=cuisine_description))+
+  geom_point()+
+  geom_line(alpha=0.5)+
+  geom_smooth(method = lm, se=FALSE)+
+  scale_color_viridis(name="Cuisine",discrete = TRUE)
+  labs(
+    x="Year",
+    y="Annual Mean of Score",
+    title = "2014-2017 Annual Score Plot"
+  )+
+    theme(plot.title = element_text(face="bold"))+
+    theme_classic()
+
+ggplotly(yearplt)
+
+```
+
+Since we have categorial variable on x scale, it's very hard to observe any direct trends from the scatterplots of all score plots. We make a mean score per year instead. We make exact trends and general trends plots separately. Although there is a general increasing trends for four cuisine restaurants from 2014 to 2017, the Japanese, Chinese and Asian's mean score were decreasing from 2014 to 2016. From 2016 to 2017, mean score of these three cuisine restaurants increase vigorously. The average score of Korean restuarant was continuously increasing from 2014 to 2017 though there is an slight decrease of mean score in 2016.  
+
+
 
 
